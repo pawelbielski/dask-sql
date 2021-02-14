@@ -595,6 +595,32 @@ class RandIntegerOperation(BaseRandomOperation):
         return random_state.randint(size=len(partition), low=0, **kwargs)
 
 
+class ReinterpretOperation(Operation):
+    needs_rex = True
+
+    def __init__(self):
+        super().__init__(self.reinterpret)
+
+    def reinterpret(self, *operands, rex):
+        expected_type = sql_to_python_type(str(rex.getType()))
+
+        assert len(operands) == 1
+        operand = operands[0]
+        return pd.to_numeric(operand).astype(expected_type)
+
+
+class IntegerDivisionOperator(Operation):
+    needs_rex = True
+
+    def __init__(self):
+        super().__init__(self.int_div)
+
+    def int_div(self, lhs, rhs, rex=None):
+        result = lhs // rhs
+
+        return result
+
+
 class RexCallPlugin(BaseRexPlugin):
     """
     RexCall is used for expressions, which calculate something.
@@ -643,6 +669,8 @@ class RexCallPlugin(BaseRexPlugin):
         "is not unknown": NotOperation().of(IsNullOperation()),
         "rand": RandOperation(),
         "rand_integer": RandIntegerOperation(),
+        "reinterpret": ReinterpretOperation(),
+        "/int": IntegerDivisionOperator(),
         # Unary math functions
         "abs": TensorScalarOperation(lambda x: x.abs(), np.abs),
         "acos": Operation(da.arccos),

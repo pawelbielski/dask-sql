@@ -454,8 +454,11 @@ def test_string_functions(c):
 
 def test_date_functions(c):
     date = datetime(2021, 10, 3, 15, 53, 42, 47)
+    date2 = datetime(2020, 9, 2, 15, 53, 42, 47)
+    date3 = datetime(2022, 11, 4, 15, 53, 42, 47)
 
-    df = dd.from_pandas(pd.DataFrame({"d": [date]}), npartitions=1)
+
+    df = dd.from_pandas(pd.DataFrame({"d": [date], "d2": [date2], "d3": [date3]}), npartitions=1)
     c.register_dask_table(df, "df")
 
     df = c.sql(
@@ -488,6 +491,14 @@ def test_date_functions(c):
             TIMESTAMPADD(SECOND, 1, d) as "plus_1_sec",
             TIMESTAMPADD(MICROSECOND, 1000, d) as "plus_1000_millisec",
             TIMESTAMPADD(QUARTER, 1, d) as "plus_1_qt",
+
+            TIMESTAMPDIFF(YEAR, d, d) as "diff_year_d_d"
+            TIMESTAMPDIFF(YEAR, d, d2) as "diff_year_d_d2"
+            TIMESTAMPDIFF(MONTH, d, d2) as "diff_month_d_d2"
+            TIMESTAMPDIFF(DAY, d, d2) as "diff_day_d_d2" 
+            TIMESTAMPDIFF(YEAR, d, d3) as "diff_year_d_d3"
+            TIMESTAMPDIFF(MONTH, d, d3) as "diff_month_d_d3"
+            TIMESTAMPDIFF(DAY, d, d3) as "diff_day_d_d3"
 
             CEIL(d TO DAY) as ceil_to_day,
             CEIL(d TO HOUR) as ceil_to_hour,
@@ -532,6 +543,13 @@ def test_date_functions(c):
             "plus_1_sec": [datetime(2021, 10, 3, 15, 53, 43, 47)],
             "plus_1000_millisec": [datetime(2021, 10, 3, 15, 53, 42, 1047)],
             "plus_1_qt": [datetime(2022, 1, 3, 15, 53, 42, 47)],
+            "diff_year_d_d": [0],
+            "diff_year_d_d2": [-1],
+            "diff_month_d_d2": [-13],
+            "diff_day_d_d2": [-396],
+            "diff_year_d_d3": [1],
+            "diff_month_d_d3": [13],
+            "diff_day_d_d3": [397],
             "ceil_to_day": [datetime(2021, 10, 4)],
             "ceil_to_hour": [datetime(2021, 10, 3, 16)],
             "ceil_to_minute": [datetime(2021, 10, 3, 15, 54)],
